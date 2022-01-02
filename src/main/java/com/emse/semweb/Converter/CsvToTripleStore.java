@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.apache.commons.csv.CSVFormat;
@@ -33,7 +34,7 @@ import java.io.Writer;
 
 
 public class CsvToTripleStore {
-    static String personURI    = "http://somewhere/JohnSmith";
+
 
 
     public static void main(String[] args) throws IOException  {
@@ -68,11 +69,14 @@ public class CsvToTripleStore {
         String sosa="http://www.w3.org/ns/sosa/";
         String cdt="http://w3id.org/lindt/custom_datatypes#";
         String rdfs= RDFS.uri;
-        try (BufferedReader r = new BufferedReader(new FileReader("C:\\\\Users\\\\eleves\\\\Desktop\\\\Sensors.csv"))) {
+        BufferedReader r = null;
+        try {
+             r = new BufferedReader(new FileReader("C:\\\\Users\\\\eleves\\\\Desktop\\\\Sensors.csv"));
             r.readLine(); // remove the header
             String line;
             int i=1;
-            while ((line = r.readLine()) != null && i<20) {
+            ArrayList<String> isDuplicate = new ArrayList<String>();
+            while ((line = r.readLine()) != null) {
                 i++;
                 if (line.isEmpty())
                     continue;
@@ -81,7 +85,7 @@ public class CsvToTripleStore {
                 String stopId = raw[0].replace(" ", "_");
 
                 String str = raw[1];
-                SimpleDateFormat sf = new SimpleDateFormat("hh:mm:ss");
+                SimpleDateFormat sf = new SimpleDateFormat("H");
                 Date date = new Date(Long.parseLong(str));
                 String datetime=sf.format(date);
 
@@ -92,46 +96,53 @@ public class CsvToTripleStore {
                 String location = raw[9];
                 String humidity = raw[7];
 
-                m.add(
-                        m.createResource(
-                                "sensor/"+id),
-                        RDF.type,
+                if(!isDuplicate.contains(location+datetime) && !humidity.equals("")) {
 
-                        m.createResource(sosa+"Sensor")
+                    m.add(
+                            m.createResource(
+                                    "sensor/" + id),
+                            RDF.type,
 
-                );
+                            m.createResource(sosa + "Sensor")
 
-                m.add(
-                        m.createResource(
-                                "observation/"+i),
-                        m.createProperty(sosa+"madeBySensor"),
-                        m.createResource("sensor/"+id)
-                );
-                m.add(
-                        m.createResource(
-                                "observation/"+i),
-                        m.createProperty(sosa+"isHostedBy"),
-                        m.createResource(location)
-                );
-                m.add(
-                        m.createResource(
-                                "observation/"+i),
-                        m.createProperty(sosa+"resultTime"),
+                    );
 
-                        m.createTypedLiteral(datetime, XSDDatatype.XSDtime)
+                    m.add(
+                            m.createResource(
+                                    "observation/" + i),
+                            m.createProperty(sosa + "madeBySensor"),
+                            m.createResource("sensor/" + id)
+                    );
+                    m.add(
+                            m.createResource(
+                                    "observation/" + i),
+                            m.createProperty(sosa + "isHostedBy"),
+                            m.createResource(location)
+                    );
+                    isDuplicate.add(location+datetime);
+                    m.add(
+                            m.createResource(
+                                    "observation/" + i),
+                            m.createProperty(sosa + "resultTime"),
 
-
-                );
-                m.add(
-                        m.createResource(
-                                "observation/"+i),
-                        m.createProperty(sosa+"hasSimpleResult"),
-                        m.createTypedLiteral(humidity,cdt)
+                            m.createTypedLiteral(datetime, XSDDatatype.XSDtime)
 
 
-                );
+                    );
+
+                    m.add(
+                            m.createResource(
+                                    "observation/" + i),
+                            m.createProperty(sosa + "hasSimpleResult"),
+                            m.createTypedLiteral(humidity, cdt)
 
 
+                    );
+                    try (RDFConnection conn = RDFConnectionFactory.connect(datasetURL)) {
+                        conn.put(m);
+
+                    }
+                }
 
 
 
@@ -141,21 +152,8 @@ public class CsvToTripleStore {
         }
 
         // add the triple to the triplestore
-        StmtIterator iter = m.listStatements();
 
-        // print out the predicate, subject and object of each statement
-        while (iter.hasNext()) {
 
-            Statement stmt      = iter.nextStatement();  // get next statement
-            if (stmt.getObject().isLiteral())
-            {
-                String dates = stmt.getString();   // get the subject
-                System.out.print(dates+"\n");
-            }
-        }
-        try (RDFConnection conn = RDFConnectionFactory.connect(datasetURL)) {
-            conn.put(m);
-        }
 
 
     }
