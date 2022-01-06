@@ -25,14 +25,14 @@ public class SensorController {
     @GetMapping // (5)
     public List<SensorDto> findAll() {
         List<SensorDto> Sensors =new ArrayList<SensorDto>();
-        String datasetURL = "http://localhost:3030/test2/";
+        String datasetURL = "http://localhost:3030/Sensors/";
         String sparqlEndpoint = datasetURL + "sparql";
         String sparqlUpdate = datasetURL + "update";
         String graphStore = datasetURL + "data";
 
         RDFConnection conneg = RDFConnectionFactory.connect(sparqlEndpoint,sparqlUpdate,graphStore);
 
-        QueryExecution qExec = conneg.query("SELECT ?subject (str(?time) as ?ti) (str(?result) as ?res) ?room WHERE {?subject a ?object.?observation <http://www.w3.org/ns/sosa/madeBySensor> ?subject.?observation <http://www.w3.org/ns/sosa/hasSimpleResult> ?result.?observation <http://www.w3.org/ns/sosa/resultTime> ?time.?observation <http://www.w3.org/ns/sosa/isHostedBy> ?room. }")  ;
+        QueryExecution qExec = conneg.query("SELECT ?subject (str(?time) as ?ti) (str(?result) as ?res) ?room WHERE {?subject a ?object.?observation <http://www.w3.org/ns/sosa/madeBySensor> ?subject.?observation <http://www.w3.org/ns/sosa/hasSimpleResult> ?result.?observation <http://www.w3.org/ns/sosa/resultTime> ?time.?observation <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?room. }")  ;
         ResultSet rs = qExec.execSelect() ;
 
 
@@ -43,7 +43,7 @@ public class SensorController {
             Resource room = qs.getResource("room");
             Literal time = qs.getLiteral("ti");
             Literal res = qs.getLiteral("res");
-            System.out.println("Literal: "+res.toString()) ;
+
             sensor1.setName(subject.toString());
             sensor1.setResultTime(time.toString());
             sensor1.setResult(res.toString());
