@@ -57,7 +57,7 @@ public class WeatherToTripleStore {
         m.setNsPrefix("time","http://www.w3.org/2006/time#");
         m.setNsPrefix("cdt","http://w3id.org/lindt/custom_datatypes#");
         m.setNsPrefix("xsd","http://www.w3.org/2001/XMLSchema#");
-        String datasetURL = "http://localhost:3030/Weather/";
+        String datasetURL = "http://localhost:3030/Sensors/";
         String sparqlEndpoint = datasetURL + "sparql";
         String sparqlUpdate = datasetURL + "update";
         String graphStore = datasetURL + "data";
@@ -86,19 +86,17 @@ public class WeatherToTripleStore {
 
                 String str = raw[0].replace(" h", "");
                 System.out.print(str);
-                SimpleDateFormat sf = new SimpleDateFormat("H");
-                Date date = new Date(Long.parseLong(str));
-                String datetime=sf.format(date);
+                int datetime= Integer.parseInt(str);
+
 
                 // Create an instance of SimpleDateFormat used for formatting
                 // the string representation of date according to the chosen pattern
 
-                String id = raw[8];
-                String location = raw[9];
-                String temperature = raw[7];
+
+                String temperature = raw[4];
                 m.add(
                         m.createResource(
-                                "sensor"+ i ),
+                                "sensor" ),
                         RDF.type,
 
                         m.createResource(sosa + "Sensor")
@@ -108,7 +106,7 @@ public class WeatherToTripleStore {
                         m.createResource(
                                 "observation_weather/" + i),
                         m.createProperty(sosa + "madeBySensor"),
-                        m.createResource("sensor"+ i )
+                        m.createResource("sensor")
                 );
                 m.add(
                         m.createResource(
@@ -138,7 +136,7 @@ public class WeatherToTripleStore {
 
                     );
                     try (RDFConnection conn = RDFConnectionFactory.connect(datasetURL)) {
-                        conn.put(m);
+                        conn.load(m);
 
                     }
                 }

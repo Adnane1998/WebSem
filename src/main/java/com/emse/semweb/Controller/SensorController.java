@@ -32,21 +32,22 @@ public class SensorController {
 
         RDFConnection conneg = RDFConnectionFactory.connect(sparqlEndpoint,sparqlUpdate,graphStore);
 
-        QueryExecution qExec = conneg.query("SELECT ?subject (str(?time) as ?ti) (str(?result) as ?res) ?room WHERE {?subject a ?object.?observation <http://www.w3.org/ns/sosa/madeBySensor> ?subject.?observation <http://www.w3.org/ns/sosa/hasSimpleResult> ?result.?observation <http://www.w3.org/ns/sosa/resultTime> ?time.?observation <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?room. }")  ;
+        QueryExecution qExec = conneg.query("SELECT ?observation ?observation1 (str(?time) as ?ti) (str(?result) as ?res) (str(?result_weather) as ?res_wea) ?room WHERE {?observation <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?room.?observation <http://www.w3.org/ns/sosa/resultTime> ?time.?observation1 <http://www.w3.org/ns/sosa/resultTime> ?time.?observation <http://www.w3.org/ns/sosa/hasSimpleResult> ?result.?observation1 <http://www.w3.org/ns/sosa/hasSimpleResult> ?result_weather  FILTER(regex(str(?observation1), \"observation_weather\"))}")  ;
         ResultSet rs = qExec.execSelect() ;
 
 
         while(rs.hasNext()) {
             SensorDto sensor1 =new SensorDto();
             QuerySolution qs = rs.next() ;
-            Resource subject = qs.getResource("subject");
+
             Resource room = qs.getResource("room");
             Literal time = qs.getLiteral("ti");
             Literal res = qs.getLiteral("res");
+            Literal res_weather = qs.getLiteral("res_wea");
 
-            sensor1.setName(subject.toString());
             sensor1.setResultTime(time.toString());
             sensor1.setResult(res.toString());
+            sensor1.setResult_weather(res_weather.toString());
             sensor1.setHostRoom(room.toString());
 
            Sensors.add(sensor1);
@@ -72,6 +73,16 @@ class SensorDto {
 
     private String ResultTime;
     private String Result;
+
+    public String getResult_weather() {
+        return Result_weather;
+    }
+
+    public void setResult_weather(String result_weather) {
+        Result_weather = result_weather;
+    }
+
+    private String Result_weather;
 
 
     private String HostRoom;
