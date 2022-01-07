@@ -54,7 +54,8 @@ public class SensorController {
 
         }
 
-
+        qExec.close() ;
+        conneg.close() ;
         return  Sensors;  // (6)
 
     }
